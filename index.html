@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script src="https://apis.google.com/js/api.js"></script>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Storm-Web - منصة الفيديوهات</title>
+    <!-- بداية كود CSS -->
+    <style>
+        /* تصميم عامة للصفحة */
+        body {
+            font-family: 'Arial', sans-serif;
+            direction: rtl;
+            text-align: right;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f9;
+            position: relative;
+        }
+
+        /* زر أيقونة الأدمن في الزاوية العليا اليمنى */
+        .admin-icon {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: #4CAF50;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            font-weight: bold;
+            z-index: 1000;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        /* الحاوية الرئيسية */
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        /* عنوان الصفحة */
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        /* قائمة الفيديوهات */
+        .video-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        /* تصميم كل فيديو في القائمة */
+        .video-item {
+            border: 1px solid #ddd;
+            padding: 10px;
+            border-radius: 5px;
+            background: #f9f9f9;
+            position: relative;
+        }
+
+        /* تصميم الفيديو نفسه */
+        .video-item video {
+            width: 100%;
+            border-radius: 5px;
+        }
+
+        /* زر حذف الفيديو (يظهر للأدمن فقط) */
+        .delete-button {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: #f44336;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 3px;
+            cursor: pointer;
+            display: none;
+        }
+
+        /* ظهور زر الحذف للأدمن */
+        .video-item.admin-mode .delete-button {
+            display: block;
+        }
+
+        /* لوحة الأدمن (مخفية في البداية) */
+        .admin-panel {
+            margin-top: 20px;
+            padding: 15px;
+            background: #e9f7ef;
+            border-radius: 5px;
+            display: none;
+        }
+
+        /* نموذج تسجيل دخول الأدمن (مخفي في البداية) */
+        .login-form {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #f0f0f0;
+            border-radius: 5px;
+            display: none;
+        }
+
+        /* تصميم زر الأدمن وحقول الإدخال */
+        button, input[type="button"], input[type="submit"] {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+
+        input[type="text"], input[type="password"] {
+            padding: 8px;
+            margin: 5px 0;
+            width: 100%;
+            box-sizing: border-box;
+        }
+    </style>
+    <!-- نهاية كود CSS -->
+</head>
+<body>
+    <!-- زر أيقونة الأدمن -->
+    <div class="admin-icon" onclick="scrollToAdminLogin()">أدمن</div>
+
+    <!-- الحاوية الرئيسية -->
+    <div class="container">
+        <div class="header">
+            <h1>مرحبًا بك في Storm-Web</h1>
+            <p>منصة لمشاهدة الفيديوهات المرفوعة من قبل الأدمن</p>
+        </div>
+
+        <!-- نموذج تسجيل دخول الأدمن -->
+        <div class="login-form" id="adminLoginForm">
+            <input type="password" id="adminPassword" placeholder="كود الأدمن">
+            <button onclick="checkAdmin()">دخول الأدمن</button>
+        </div>
+
+        <!-- لوحة الأدمن -->
+        <div class="admin-panel" id="adminPanel">
+            <h3>رفع فيديو جديد</h3>
+            <input type="text" id="videoTitle" placeholder="عنوان الفيديو">
+            <input type="file" id="videoUpload" accept="video/*">
+            <button onclick="uploadVideo()">رفع الفيديو</button>
+        </div>
+
+        <!-- قائمة الفيديوهات -->
+        <div class="video-list" id="videoList">
+            <!-- سيتم إضافة الفيديوهات هنا بواسطة JavaScript -->
+        </div>
+    </div>
+
+    <!-- بداية كود JavaScript -->
+    <script>
+        // كود دخول الأدمن
+        const ADMIN_PASSWORD = "stu777dio";
+        // قائمة الفيديوهات (يمكن استبدالها بقاعدة بيانات حقيقية)
+        let videos = [];
+        let isAdminMode = false;
+
+        // الانتقال إلى قسم تسجيل دخول الأدمن
+        function scrollToAdminLogin() {
+            const adminLoginForm = document.getElementById("adminLoginForm");
+            adminLoginForm.style.display = "block";
+            adminLoginForm.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // التحقق من كود الأدمن
+        function checkAdmin() {
+            const password = document.getElementById("adminPassword").value;
+            if (password === ADMIN_PASSWORD) {
+                document.getElementById("adminPanel").style.display = "block";
+                isAdminMode = true;
+                alert("تم تسجيل الدخول بنجاح! يمكنك الآن رفع وحذف الفيديوهات.");
+                updateVideoList();
+            } else {
+                alert("كود الأدمن خاطئ!");
+            }
+        }
+
+        // رفع فيديو جديد (محاكاة فقط)
+        function uploadVideo() {
+            const title = document.getElementById("videoTitle").value;
+            const fileInput = document.getElementById("videoUpload");
+            const file = fileInput.files[0];
+
+            if (!title || !file) {
+                alert("يرجى إدخال عنوان الفيديو واختيار ملف!");
+                return;
+            }
+
+            // محاكاة رفع الفيديو
+            const videoURL = URL.createObjectURL(file);
+            videos.push({ title, url: videoURL });
+            updateVideoList();
+            alert("تم رفع الفيديو بنجاح!");
+        }
+
+        // حذف فيديو
+        function deleteVideo(index) {
+            videos.splice(index, 1);
+            updateVideoList();
+        }
+
+        // تحديث قائمة الفيديوهات
+        function updateVideoList() {
+            const videoList = document.getElementById("videoList");
+            videoList.innerHTML = "";
+
+            videos.forEach((video, index) => {
+                const videoItem = document.createElement("div");
+                videoItem.className = "video-item";
+                if (isAdminMode) {
+                    videoItem.classList.add("admin-mode");
+                }
+
+                videoItem.innerHTML = `
+                    <h4>${video.title}</h4>
+                    <video controls>
+                        <source src="${video.url}" type="video/mp4">
+                        متصفحك لا يدعم عرض الفيديوهات.
+                    </video>
+                    ${isAdminMode ? `<button class="delete-button" onclick="deleteVideo(${index})">حذف</button>` : ''}
+                `;
+                videoList.appendChild(videoItem);
+            });
+        }
+    </script>
+    <!-- نهاية كود JavaScript -->
+</body>
+</html>

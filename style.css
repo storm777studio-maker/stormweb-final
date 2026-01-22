@@ -1,0 +1,193 @@
+/* تصميم عامة للصفحة */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    direction: rtl;
+    text-align: right;
+    margin: 0;
+    padding: 20px;
+    background-color: #f0f2f5; /* خلفية فاتحة */
+    color: #333;
+    position: relative;
+}
+
+/* زر أيقونة الأدمن */
+.admin-icon {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    background: #1e88e5; /* أزرق غامق */
+    color: white;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    font-weight: bold;
+    z-index: 1000;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    transition: background 0.3s;
+}
+
+.admin-icon:hover {
+    background: #1565c0; /* أزرق أغمق عند التحويم */
+}
+
+/* الحاوية الرئيسية */
+.container {
+    max-width: 1100px;
+    margin: 0 auto;
+    background: white;
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* عنوان الصفحة */
+.header {
+    text-align: center;
+    margin-bottom: 30px;
+    color: #1e88e5; /* لون أزرق */
+}
+
+.header h1 {
+    margin: 0;
+    font-size: 28px;
+    font-weight: 600;
+}
+
+.header p {
+    margin: 10px 0 0;
+    color: #666;
+}
+
+/* نموذج تسجيل دخول الأدمن */
+.login-form {
+    margin-bottom: 30px;
+    padding: 25px;
+    background: #f9f9f9;
+    border-radius: 8px;
+    display: none;
+    border: 1px solid #e0e0e0;
+}
+
+.login-form input {
+    width: 100%;
+    padding: 12px;
+    margin: 10px 0;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 16px;
+}
+
+.login-form button {
+    width: 100%;
+    padding: 12px;
+    background: #1e88e5;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.login-form button:hover {
+    background: #1565c0;
+}
+
+/* لوحة الأدمن */
+.admin-panel {
+    margin-top: 30px;
+    padding: 25px;
+    background: #f9f9f9;
+    border-radius: 8px;
+    display: none;
+    border: 1px solid #e0e0e0;
+}
+
+.admin-panel h3 {
+    color: #1e88e5;
+    margin-top: 0;
+}
+
+.admin-panel input[type="text"] {
+    width: 100%;
+    padding: 12px;
+    margin: 10px 0;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 16px;
+}
+
+.admin-panel button {
+    padding: 12px 20px;
+    background: #1e88e5;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.admin-panel button:hover {
+    background: #1565c0;
+}
+
+/* قائمة الفيديوهات */
+.video-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 25px;
+    margin-top: 20px;
+}
+
+/* تصميم كل فيديو في القائمة */
+.video-item {
+    border: 1px solid #e0e0e0;
+    padding: 15px;
+    border-radius: 8px;
+    background: white;
+    position: relative;
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.video-item:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+}
+
+.video-item h4 {
+    margin: 0 0 10px;
+    color: #1e88e5;
+}
+
+.video-item video {
+    width: 100%;
+    border-radius: 6px;
+    background: #000; /* خلفية سوداء للفيديو */
+}
+
+/* زر حذف الفيديو */
+.delete-button {
+    position: absolute;
+    top: 15px;
+    left: 15px;
+    background: #e53935; /* أحمر للحذف */
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    display: none;
+    font-size: 14px;
+}
+
+.video-item.admin-mode .delete-button {
+    display: block;
+}
+
+.delete-button:hover {
+    background: #c62828;
+}

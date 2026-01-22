@@ -1,12 +1,33 @@
-// --- متغيرات الحالة ---
-const ADMIN_PASSWORD = "stu777dio"; 
+// --- الإعدادات العامة ---
+const ADMIN_PASSWORD = "stu777dio"; // كود الأدمن الخاص بك
 let videos = []; 
-let isAdminMode = false; 
+let isAdminMode = false;
 
-// الرابط الخاص بك (Google Apps Script) الذي يربط الموقع بـ Google Drive
-const scriptURL = "https://script.google.com/macros/s/AKfycbzFBe5JQnbBAKkYDQc1Gjt7Tiu1L755eacKBJUjV3mAfRDVOclGp2_f4MYOrlmtS66VlQ/exec";
+// رابط الـ Web App الجديد الخاص بك
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyPWW0pcY9rLCEov4fYZjQoKnf-0Pw2GTnLqvdiuDo6hKIf437HSKxpRFwlj-q8PzSutA/exec";
 
-// --- 1. وظائف التحكم بالأدمن ---
+// --- 1. جلب البيانات عند تحميل الصفحة ---
+// هذه الوظيفة تجعل الفيديوهات تظهر للجميع فور فتح الموقع
+async function loadVideos() {
+    try {
+        const response = await fetch(SCRIPT_URL);
+        const data = await response.json();
+        // تحويل البيانات القادمة من Google Sheets إلى تنسيق يفهمه الموقع
+        videos = data.map(v => ({
+            title: v.title,
+            url: `https://drive.google.com/file/d/${v.id}/preview`,
+            isDrive: true
+        }));
+        updateVideoList();
+    } catch (e) {
+        console.error("خطأ في جلب الفيديوهات:", e);
+    }
+}
+
+// تشغيل جلب البيانات بمجرد تحميل الصفحة
+window.onload = loadVideos;
+
+// --- 2. وظائف التحكم بالأدمن ---
 function scrollToAdminLogin() {
     const adminLoginForm = document.getElementById("adminLoginForm");
     adminLoginForm.style.display = "block";
@@ -18,95 +39,95 @@ function checkAdmin() {
     if (password === ADMIN_PASSWORD) {
         document.getElementById("adminPanel").style.display = "block";
         isAdminMode = true;
-        alert("تم تسجيل الدخول بنجاح! يمكنك الآن الرفع إلى Google Drive.");
+        alert("تم تسجيل الدخول بنجاح! يمكنك الآن الرفع للسحابة.");
         updateVideoList();
     } else {
         alert("كود الأدمن خاطئ!");
     }
 }
 
-// --- 2. وظيفة الرفع باستخدام رابط الـ Web App الخاص بك ---
+// --- 3. وظيفة الرفع إلى Google Drive و Sheets ---
 async function uploadVideo() {
     const title = document.getElementById("videoTitle").value;
     const fileInput = document.getElementById("videoUpload");
     const file = fileInput.files[0];
 
     if (!title || !file) {
-        alert("يرجى إدخال عنوان الفيديو واختيار ملف!");
+        alert("يرجى إدخال عنوان واختيار ملف فيديو!");
         return;
     }
 
-    // تنبيه الأدمن ببدء العملية
-    alert("بدأ الرفع إلى Google Drive... قد يستغرق الأمر دقيقة حسب حجم الفيديو.");
+    alert("بدأ الرفع إلى Storm Drive.. قد يستغرق الأمر لحظات، يرجى عدم إغلاق الصفحة.");
 
     const reader = new FileReader();
-    reader.readAsDataURL(file); // تحويل الملف لصيغة قابلة للإرسال
-
+    reader.readAsDataURL(file); // تحويل الملف لصيغة Base64 لإرساله
+    
     reader.onload = async function () {
-        const base64 = reader.result.split(',')[1];
+        const base64Data = reader.result.split(',')[1];
         
         const payload = {
-            base64: base64,
+            base64: base64Data,
             type: file.type,
             name: title
         };
 
         try {
-            // إرسال البيانات إلى الرابط الخاص بك
-            await fetch(scriptURL, {
+            // إرسال البيانات إلى Google Apps Script
+            await fetch(SCRIPT_URL, {
                 method: 'POST',
-                mode: 'no-cors', // لضمان العمل في عمان وتخطي حواجز الحماية
-                headers: { 'Content-Type': 'application/json' },
+                mode: 'no-cors', // لتجاوز قيود الحماية في المتصفح
                 body: JSON.stringify(payload)
             });
 
-            // إشعار بالنجاح (بسبب no-cors لا يمكننا استلام رد ID الملف مباشرة)
-            alert("تم إرسال الفيديو بنجاح! سيظهر في حساب الاستوديو storm.777.studio@gmail.com قريباً.");
+            alert("تم إرسال الفيديو بنجاح! سيتم تحديث القائمة تلقائياً للجميع خلال دقيقة.");
             
-            // إضافة مؤقتة للقائمة لعرضها أمام الأدمن
+            // إضافة فيديو مؤقت للقائمة الحالية
             videos.push({ title: title, url: "#", isDrive: true });
             updateVideoList();
             
+            // تفريغ الحقول
+            document.getElementById("videoTitle").value = "";
+            document.getElementById("videoUpload").value = "";
+
         } catch (error) {
-            console.error("خطأ في الرفع:", error);
-            alert("حدث خطأ، تأكد من أن حجم الملف لا يتجاوز 50 ميجابايت.");
+            console.error("خطأ:", error);
+            alert("حدث خطأ في الرفع، تأكد من حجم الملف (يفضل أقل من 50 ميجابايت).");
         }
     };
 }
 
-// --- 3. تحديث عرض الفيديوهات ---
+// --- 4. تحديث عرض القائمة ---
 function updateVideoList() {
     const videoList = document.getElementById("videoList");
-    videoList.innerHTML = ""; 
+    videoList.innerHTML = "";
 
     videos.forEach((video, index) => {
         const videoItem = document.createElement("div");
         videoItem.className = "video-item";
-        if (isAdminMode) videoItem.classList.add("admin-mode"); 
+        if (isAdminMode) videoItem.classList.add("admin-mode");
 
-        // عرض الفيديو: إذا كان الرابط متاحاً يستخدم iframe، وإلا يظهر رسالة معالجة
-        let videoEmbed = "";
-        if (video.isDrive) {
-            if (video.url === "#") {
-                videoEmbed = `<div style="padding:20px; background:#ddd; border-radius:8px; text-align:center;">جاري معالجة الفيديو في Google Drive...</div>`;
-            } else {
-                videoEmbed = `<iframe src="${video.url}" width="100%" height="200" allow="autoplay" frameborder="0"></iframe>`;
-            }
+        let videoContent = "";
+        if (video.isDrive && video.url !== "#") {
+            // عرض الفيديو باستخدام iframe من جوجل درايف
+            videoContent = `<iframe src="${video.url}" width="100%" height="200" allow="autoplay" frameborder="0"></iframe>`;
         } else {
-            videoEmbed = `<video controls><source src="${video.url}" type="video/mp4"></video>`;
+            // حالة المعالجة أو الرفع المحلي
+            videoContent = `<div style="background:#000; color:#4CAF50; height:200px; display:flex; align-items:center; justify-content:center; border-radius:8px; text-align:center; padding:10px;">
+                                جاري معالجة الفيديو في السحابة... سيظهر هنا قريباً
+                            </div>`;
         }
 
         videoItem.innerHTML = `
             <h4>${video.title}</h4>
-            ${videoEmbed}
+            ${videoContent}
             ${isAdminMode ? `<button class="delete-button" onclick="deleteVideo(${index})">حذف</button>` : ''}
-        `; 
+        `;
         videoList.appendChild(videoItem);
     });
 }
 
 function deleteVideo(index) {
-    if (confirm("هل أنت متأكد من حذف هذا الفيديو من القائمة؟")) {
+    if (confirm("هل تريد حذف هذا الفيديو من القائمة؟ (ملاحظة: سيحذف من العرض فقط)")) {
         videos.splice(index, 1);
         updateVideoList();
     }
